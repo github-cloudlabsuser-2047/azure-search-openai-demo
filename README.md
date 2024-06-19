@@ -1,210 +1,192 @@
-# ChatGPT-like app with your data using Azure OpenAI and Azure AI Search (Python)
+# Azure OpenAI and Azure AI Search ChatGPT-like App (Python)
 
-This solution's backend is written in Python. There are also [**JavaScript**](https://aka.ms/azai/js/code), [**.NET**](https://aka.ms/azai/net/code), and [**Java**](https://aka.ms/azai/java/code) samples based on this one. Learn more about [developing AI apps using Azure AI Services](https://aka.ms/azai).
+This repository contains a solution for creating a ChatGPT-like application using Azure OpenAI and Azure AI Search. The backend of the solution is written in Python. There are also JavaScript, .NET, and Java samples available based on this solution. To learn more about developing AI applications using Azure AI Services, visit the [Azure AI Services documentation](https://aka.ms/azai).
 
 ## Table of Contents
 
 - [Features](#features)
-- [Azure account requirements](#azure-account-requirements)
-- [Azure deployment](#azure-deployment)
-  - [Cost estimation](#cost-estimation)
-  - [Project setup](#project-setup)
+- [Azure Account Requirements](#azure-account-requirements)
+- [Azure Deployment](#azure-deployment)
+  - [Cost Estimation](#cost-estimation)
+  - [Project Setup](#project-setup)
     - [GitHub Codespaces](#github-codespaces)
     - [VS Code Dev Containers](#vs-code-dev-containers)
-    - [Local environment](#local-environment)
+    - [Local Environment](#local-environment)
   - [Deploying](#deploying)
-  - [Deploying again](#deploying-again)
-- [Sharing environments](#sharing-environments)
-- [Using the app](#using-the-app)
-- [Running locally](#running-locally)
+  - [Deploying Again](#deploying-again)
+- [Sharing Environments](#sharing-environments)
+- [Using the App](#using-the-app)
+- [Running Locally](#running-locally)
 - [Monitoring with Application Insights](#monitoring-with-application-insights)
-- [Customizing the UI and data](#customizing-the-ui-and-data)
+- [Customizing the UI and Data](#customizing-the-ui-and-data)
 - [Productionizing](#productionizing)
-- [Clean up](#clean-up)
+- [Clean Up](#clean-up)
 - [Troubleshooting](#troubleshooting)
 - [Resources](#resources)
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=599293758&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
 [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/azure-search-openai-demo)
 
-This sample demonstrates a few approaches for creating ChatGPT-like experiences over your own data using the Retrieval Augmented Generation pattern. It uses Azure OpenAI Service to access a GPT model (gpt-35-turbo), and Azure AI Search for data indexing and retrieval.
+This repository provides a sample application that demonstrates how to create ChatGPT-like experiences using the Retrieval Augmented Generation pattern. It utilizes Azure OpenAI Service to access a GPT model (gpt-35-turbo) and Azure AI Search for data indexing and retrieval.
 
-The repo includes sample data so it's ready to try end to end. In this sample application we use a fictitious company called Contoso Electronics, and the experience allows its employees to ask questions about the benefits, internal policies, as well as job descriptions and roles.
-
-![RAG Architecture](docs/images/appcomponents.png)
+The sample includes pre-built data related to a fictitious company called Contoso Electronics. The application allows employees to ask questions about benefits, internal policies, job descriptions, and roles.
 
 ## Features
 
 - Chat (multi-turn) and Q&A (single turn) interfaces
-- Renders citations and thought process for each answer
-- Includes settings directly in the UI to tweak the behavior and experiment with options
-- Integrates Azure AI Search for indexing and retrieval of documents, with support for [many document formats](/docs/data_ingestion.md#supported-document-formats) as well as [integrated vectorization](/docs/data_ingestion.md#overview-of-integrated-vectorization)
-- Optional usage of [GPT-4 with vision](/docs/gpt4vision.md) to reason over image-heavy documents
-- Optional addition of [speech input/output](/docs/deploy_features.md#enabling-speech-inputoutput) for accessibility
-- Optional automation of [user login and data access](/docs/login_and_acl.md) via Microsoft Entra
+- Citations and thought process for each answer
+- UI settings to customize behavior and experiment with options
+- Integration with Azure AI Search for document indexing and retrieval, supporting various document formats and integrated vectorization
+- Optional usage of GPT-4 with vision for image-heavy documents
+- Optional speech input/output for accessibility
+- Optional user login and data access via Microsoft Entra
 - Performance tracing and monitoring with Application Insights
 
-![Chat screen](docs/images/chatscreen.png)
+## Azure Account Requirements
 
-[📺 Watch a video overview of the app.](https://youtu.be/3acB0OWmLvM)
+To deploy and run this example, you'll need the following:
 
-## Azure account requirements
+- Azure account: If you're new to Azure, you can [get an Azure account for free](https://azure.microsoft.com/free/cognitive-search/) and receive free Azure credits to get started.
+- Azure subscription with access enabled for the Azure OpenAI service: You can request access using [this form](https://aka.ms/oaiapply). If your access request to Azure OpenAI service doesn't match the [acceptance criteria](https://learn.microsoft.com/legal/cognitive-services/openai/limited-access?context=%2Fazure%2Fcognitive-services%2Fopenai%2Fcontext%2Fcontext), you can use the [OpenAI public API](https://platform.openai.com/docs/api-reference/introduction) instead. Learn how to switch to an OpenAI instance in the [documentation](docs/deploy_existing.md#openaicom-openai).
+- Azure account permissions: Your Azure account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [Role Based Access Control Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#role-based-access-control-administrator-preview), [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator), or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner). If you don't have subscription-level permissions, you must be granted [RBAC](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#role-based-access-control-administrator-preview) for an existing resource group and [deploy to that existing group](docs/deploy_existing.md#resource-group). Your Azure account also needs `Microsoft.Resources/deployments/write` permissions on the subscription level.
 
-**IMPORTANT:** In order to deploy and run this example, you'll need:
+## Azure Deployment
 
-- **Azure account**. If you're new to Azure, [get an Azure account for free](https://azure.microsoft.com/free/cognitive-search/) and you'll get some free Azure credits to get started. See [guide to deploying with the free trial](docs/deploy_lowcost.md).
-- **Azure subscription with access enabled for the Azure OpenAI service**. You can request access with [this form](https://aka.ms/oaiapply). If your access request to Azure OpenAI service doesn't match the [acceptance criteria](https://learn.microsoft.com/legal/cognitive-services/openai/limited-access?context=%2Fazure%2Fcognitive-services%2Fopenai%2Fcontext%2Fcontext), you can use [OpenAI public API](https://platform.openai.com/docs/api-reference/introduction) instead. Learn [how to switch to an OpenAI instance](docs/deploy_existing.md#openaicom-openai).
-- **Azure account permissions**:
-  - Your Azure account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [Role Based Access Control Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#role-based-access-control-administrator-preview), [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator), or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner). If you don't have subscription-level permissions, you must be granted [RBAC](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#role-based-access-control-administrator-preview) for an existing resource group and [deploy to that existing group](docs/deploy_existing.md#resource-group).
-  - Your Azure account also needs `Microsoft.Resources/deployments/write` permissions on the subscription level.
+### Cost Estimation
 
-## Azure deployment
-
-### Cost estimation
-
-Pricing varies per region and usage, so it isn't possible to predict exact costs for your usage.
-However, you can try the [Azure pricing calculator](https://azure.com/e/d18187516e9e421e925b3b311eec8aae) for the resources below.
+The pricing for this solution varies based on region and usage. You can use the [Azure pricing calculator](https://azure.com/e/d18187516e9e421e925b3b311eec8aae) to estimate the costs for the following resources:
 
 - Azure App Service: Basic Tier with 1 CPU core, 1.75 GB RAM. Pricing per hour. [Pricing](https://azure.microsoft.com/pricing/details/app-service/linux/)
-- Azure OpenAI: Standard tier, GPT and Ada models. Pricing per 1K tokens used, and at least 1K tokens are used per question. [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/)
-- Azure AI Document Intelligence: SO (Standard) tier using pre-built layout. Pricing per document page, sample documents have 261 pages total. [Pricing](https://azure.microsoft.com/pricing/details/form-recognizer/)
+- Azure OpenAI: Standard tier, GPT and Ada models. Pricing per 1K tokens used, with at least 1K tokens used per question. [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/)
+- Azure AI Document Intelligence: SO (Standard) tier using pre-built layout. Pricing per document page, with sample documents having a total of 261 pages. [Pricing](https://azure.microsoft.com/pricing/details/form-recognizer/)
 - Azure AI Search: Standard tier, 1 replica, free level of semantic search. Pricing per hour. [Pricing](https://azure.microsoft.com/pricing/details/search/)
 - Azure Blob Storage: Standard tier with ZRS (Zone-redundant storage). Pricing per storage and read operations. [Pricing](https://azure.microsoft.com/pricing/details/storage/blobs/)
 - Azure Monitor: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
 
-To reduce costs, you can switch to free SKUs for various services, but those SKUs have limitations.
-See this guide on [deploying with minimal costs](docs/deploy_lowcost.md) for more details.
+To reduce costs, you can switch to free SKUs for various services, but note that these SKUs have limitations. Refer to the [guide on deploying with minimal costs](docs/deploy_lowcost.md) for more details.
 
-⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
+### Project Setup
 
-### Project setup
-
-You have a few options for setting up this project.
-The easiest way to get started is GitHub Codespaces, since it will setup all the tools for you,
-but you can also [set it up locally](#local-environment) if desired.
+There are multiple options for setting up this project. The easiest way to get started is by using GitHub Codespaces, which sets up all the necessary tools for you. Alternatively, you can set up the project locally.
 
 #### GitHub Codespaces
 
-You can run this repo virtually by using GitHub Codespaces, which will open a web-based VS Code in your browser:
+You can run this repository virtually using GitHub Codespaces, which opens a web-based VS Code environment in your browser. Click the following badge to open the environment:
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=599293758&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
 
-Once the codespace opens (this may take several minutes), open a terminal window.
+Once the Codespace is open, you can access the terminal window.
 
 #### VS Code Dev Containers
 
-A related option is VS Code Dev Containers, which will open the project in your local VS Code using the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers):
+Another option is to use VS Code Dev Containers, which opens the project in your local VS Code using the Dev Containers extension. Follow these steps:
 
-1. Start Docker Desktop (install it if not already installed)
-1. Open the project:
-    [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/azure-search-openai-demo)
-1. In the VS Code window that opens, once the project files show up (this may take several minutes), open a terminal window.
+1. Start Docker Desktop (install it if not already installed).
+2. Open the project by clicking the following badge:
 
-#### Local environment
+[![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/azure-search-openai-demo)
+
+Once the project files appear in the VS Code window, you can access the terminal window.
+
+#### Local Environment
+
+To set up the project in your local environment, follow these steps:
 
 1. Install the required tools:
+   - [Azure Developer CLI](https://aka.ms/azure-dev/install)
+   - [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/)
+     - Ensure that Python and the pip package manager are in the path in Windows for the setup scripts to work.
+     - Make sure you can run `python --version` from the console. On Ubuntu, you might need to run `sudo apt install python-is-python3` to link `python` to `python3`.
+   - [Node.js 18+](https://nodejs.org/download/)
+   - [Git](https://git-scm.com/downloads)
+   - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
+     - Ensure that you can run `pwsh.exe` from a PowerShell terminal. If this fails, you may need to upgrade PowerShell.
+2. Create a new folder and navigate to it in the terminal.
+3. Run the following command to download the project code:
 
-    - [Azure Developer CLI](https://aka.ms/azure-dev/install)
-    - [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/)
-      - **Important**: Python and the pip package manager must be in the path in Windows for the setup scripts to work.
-      - **Important**: Ensure you can run `python --version` from console. On Ubuntu, you might need to run `sudo apt install python-is-python3` to link `python` to `python3`.
-    - [Node.js 18+](https://nodejs.org/download/)
-    - [Git](https://git-scm.com/downloads)
-    - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
-      - **Important**: Ensure you can run `pwsh.exe` from a PowerShell terminal. If this fails, you likely need to upgrade PowerShell.
+   ```shell
+   azd init -t azure-search-openai-demo
+   ```
 
-2. Create a new folder and switch to it in the terminal.
-3. Run this command to download the project code:
-
-    ```shell
-    azd init -t azure-search-openai-demo
-    ```
-
-    Note that this command will initialize a git repository, so you do not need to clone this repository.
+   Note that this command initializes a git repository, so you do not need to clone this repository.
 
 ### Deploying
 
-Follow these steps to provision Azure resources and deploy the application code:
+To provision Azure resources and deploy the application code, follow these steps:
 
-1. Login to your Azure account:
+1. Log in to your Azure account:
 
-    ```shell
-    azd auth login
-    ```
+   ```shell
+   azd auth login
+   ```
 
-1. Create a new azd environment:
+2. Create a new azd environment:
 
-    ```shell
-    azd env new
-    ```
+   ```shell
+   azd env new
+   ```
 
-    Enter a name that will be used for the resource group.
-    This will create a new folder in the `.azure` folder, and set it as the active environment for any calls to `azd` going forward.
-1. (Optional) This is the point where you can customize the deployment by setting environment variables, in order to [use existing resources](docs/deploy_existing.md), [enable optional features (such as auth or vision)](docs/deploy_features.md), or [deploy to free tiers](docs/deploy_lowcost.md).
-1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
-    - **Important**: Beware that the resources created by this command will incur immediate costs, primarily from the AI Search resource. These resources may accrue costs even if you interrupt the command before it is fully executed. You can run `azd down` or delete the resources manually to avoid unnecessary spending.
-    - You will be prompted to select two locations, one for the majority of resources and one for the OpenAI resource, which is currently a short list. That location list is based on the [OpenAI model availability table](https://learn.microsoft.com/azure/cognitive-services/openai/concepts/models#model-summary-table-and-region-availability) and may become outdated as availability changes.
-1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.
-It will look like the following:
+   Enter a name for the resource group. This will create a new folder in the `.azure` directory and set it as the active environment for any `azd` calls.
+3. (Optional) Customize the deployment by setting environment variables to use existing resources, enable optional features, or deploy to free tiers.
+4. Run `azd up` to provision Azure resources and deploy the sample to those resources. This command will also build the search index based on the files in the `./data` folder.
+   - Note: The resources created by this command will incur immediate costs, primarily from the AI Search resource. These resources may accrue costs even if you interrupt the command before it is fully executed. To avoid unnecessary spending, you can run `azd down` or manually delete the resources.
+   - You will be prompted to select two locations: one for the majority of resources and one for the OpenAI resource. The location list is based on the [OpenAI model availability table](https://learn.microsoft.com/azure/cognitive-services/openai/concepts/models#model-summary-table-and-region-availability) and may become outdated as availability changes.
+5. After the application is successfully deployed, a URL will be printed to the console. Click the URL to interact with the application in your browser.
 
-!['Output from running azd up'](docs/images/endpoint.png)
+### Deploying Again
 
-> NOTE: It may take 5-10 minutes after you see 'SUCCESS' for the application to be fully deployed. If you see a "Python Developer" welcome screen or an error page, then wait a bit and refresh the page. See [guide on debugging App Service deployments](docs/appservice.md).
+If you have only made changes to the backend/frontend code in the `app` folder, you can redeploy the application without re-provisioning the Azure resources. Run the following command:
 
-### Deploying again
+```shell
+azd deploy
+```
 
-If you've only changed the backend/frontend code in the `app` folder, then you don't need to re-provision the Azure resources. You can just run:
+If you have made changes to the infrastructure files (`infra` folder or `azure.yaml`), you will need to re-provision the Azure resources. Run the following command:
 
-```azd deploy```
+```shell
+azd up
+```
 
-If you've changed the infrastructure files (`infra` folder or `azure.yaml`), then you'll need to re-provision the Azure resources. You can do that by running:
+## Sharing Environments
 
-```azd up```
+To give someone else access to a fully deployed environment, follow these steps:
 
-## Sharing environments
+1. Install the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli).
+2. Run `azd init -t azure-search-openai-demo` or clone this repository.
+3. Run `azd env refresh -e {environment name}`. You will need the azd environment name, subscription ID, and location to run this command. You can find those values in your `.azure/{env name}/.env` file. This command populates the `.env` file of the recipient's azd environment with the necessary settings to run the application locally.
+4. Set the environment variable `AZURE_PRINCIPAL_ID` in the `.env` file or in the active shell to the Azure ID of the recipient. They can obtain their Azure ID by running `az ad signed-in-user show`.
+5. Run `./scripts/roles.ps1` or `.scripts/roles.sh` to assign all the necessary roles to the recipient. If the recipient does not have the necessary permission to create roles in the subscription, you may need to run this script on their behalf. After running the script, the recipient should be able to run the application locally.
 
-To give someone else access to a completely deployed and existing environment,
-either you or they can follow these steps:
+## Running Locally
 
-1. Install the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
-1. Run `azd init -t azure-search-openai-demo` or clone this repository.
-1. Run `azd env refresh -e {environment name}`
-   They will need the azd environment name, subscription ID, and location to run this command. You can find those values in your `.azure/{env name}/.env` file.  This will populate their azd environment's `.env` file with all the settings needed to run the app locally.
-1. Set the environment variable `AZURE_PRINCIPAL_ID` either in that `.env` file or in the active shell to their Azure ID, which they can get with `az ad signed-in-user show`.
-1. Run `./scripts/roles.ps1` or `.scripts/roles.sh` to assign all of the necessary roles to the user.  If they do not have the necessary permission to create roles in the subscription, then you may need to run this script for them. Once the script runs, they should be able to run the app locally.
+You can run the application locally after successfully running the `azd up` command. If you haven't done so, follow the steps in the [Azure Deployment](#azure-deployment) section above.
 
-## Running locally
+1. Run `azd auth login`.
+2. Navigate to the `app` directory.
+3. Run `./start.ps1` or `./start.sh`, or use the "VS Code Task: Start App" command to start the project locally.
 
-You can only run locally **after** having successfully run the `azd up` command. If you haven't yet, follow the steps in [Azure deployment](#azure-deployment) above.
+For more tips on local development, refer to the [local development guide](docs/localdev.md).
 
-1. Run `azd auth login`
-2. Change dir to `app`
-3. Run `./start.ps1` or `./start.sh` or run the "VS Code Task: Start App" to start the project locally.
+## Using the App
 
-See more tips in [the local development guide](docs/localdev.md).
+To use the application:
 
-## Using the app
-
-- In Azure: navigate to the Azure WebApp deployed by azd. The URL is printed out when azd completes (as "Endpoint"), or you can find it in the Azure portal.
-- Running locally: navigate to 127.0.0.1:50505
+- In Azure: Navigate to the Azure WebApp deployed by azd. The URL is printed out when azd completes (as "Endpoint"), or you can find it in the Azure portal.
+- Running locally: Navigate to 127.0.0.1:50505.
 
 Once in the web app:
 
-- Try different topics in chat or Q&A context. For chat, try follow up questions, clarifications, ask to simplify or elaborate on answer, etc.
-- Explore citations and sources
-- Click on "settings" to try different options, tweak prompts, etc.
+- Try different topics in the chat or Q&A context. For chat, try follow-up questions, clarifications, asking to simplify or elaborate on an answer, etc.
+- Explore citations and sources.
+- Click on "settings" to try different options and tweak prompts.
 
 ## Monitoring with Application Insights
 
-By default, deployed apps use Application Insights for the tracing of each request, along with the logging of errors.
+The deployed application uses Application Insights for request tracing and error logging by default.
 
-To see the performance data, go to the Application Insights resource in your resource group, click on the "Investigate -> Performance" blade and navigate to any HTTP request to see the timing data.
-To inspect the performance of chat requests, use the "Drill into Samples" button to see end-to-end traces of all the API calls made for any chat request:
+To view performance data, go to the Application Insights resource in your resource group, click on the "Investigate -> Performance" blade, and navigate to any HTTP request to see timing data. Use the "Drill into Samples" button to see end-to-end traces of all the API calls made for any chat request.
 
-![Tracing screenshot](docs/images/transaction-tracing.png)
-
-To see any exceptions and server errors, navigate to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. You can see Python stack traces on the right-hand side.
+To view exceptions and server errors, go to the "Investigate -> Failures" blade and use the filtering tools to locate a specific exception. Python stack traces can be found on the right-hand side.
 
 You can also see chart summaries on a dashboard by running the following command:
 
@@ -212,36 +194,54 @@ You can also see chart summaries on a dashboard by running the following command
 azd monitor
 ```
 
-## Customizing the UI and data
+## Customizing the UI and Data
 
-Once you successfully deploy the app, you can start customizing it for your needs: changing the text, tweaking the prompts, and replacing the data. Consult the [app customization guide](docs/customization.md) as well as the [data ingestion guide](docs/data_ingestion.md) for more details.
+After successfully deploying the application, you can customize it to suit your needs. You can change the text, tweak the prompts, and replace the data. Refer to the [app customization guide](docs/customization.md) and the [data ingestion guide](docs/data_ingestion.md) for more details.
 
 ## Productionizing
 
-This sample is designed to be a starting point for your own production application,
-but you should do a thorough review of the security and performance before deploying
-to production. Read through our [productionizing guide](docs/productionizing.md) for more details.
+This sample serves as a starting point for your own production application. Before deploying to production, it is recommended to review the security and performance aspects. Read through the [productionizing guide](docs/productionizing.md) for more details.
 
-## Clean up
+## Clean Up
 
 To clean up all the resources created by this sample:
 
-1. Run `azd down`
-2. When asked if you are sure you want to continue, enter `y`
-3. When asked if you want to permanently delete the resources, enter `y`
+1. Run `azd down`.
+2. When prompted if you are sure you want to continue, enter `y`.
+3. When prompted if you want to permanently delete the resources, enter `y`.
 
-The resource group and all the resources will be deleted.
+The resource group and all associated resources will be deleted.
 
 ## Troubleshooting
 
-Here are the most common failure scenarios and solutions:
+Here are some common failure scenarios and their solutions:
 
-1. The subscription (`AZURE_SUBSCRIPTION_ID`) doesn't have access to the Azure OpenAI service. Please ensure `AZURE_SUBSCRIPTION_ID` matches the ID specified in the [OpenAI access request process](https://aka.ms/oai/access).
+1. The subscription (`AZURE_SUBSCRIPTION_ID`) does not have access to the Azure OpenAI service. Ensure that `AZURE_SUBSCRIPTION_ID` matches the ID specified in the [OpenAI access request process](https://aka.ms/oai/access).
 
-1. You're attempting to create resources in regions not enabled for Azure OpenAI (e.g. East US 2 instead of East US), or where the model you're trying to use isn't enabled. See [this matrix of model availability](https://aka.ms/oai/models).
+2. You are attempting to create resources in regions that are not enabled for Azure OpenAI or where the model you are trying to use is not enabled. Refer to the [model availability table](https://aka.ms/oai/models) for the list of available models and regions.
 
-1. You've exceeded a quota, most often number of resources per region. See [this article on quotas and limits](https://aka.ms/oai/quotas).
+3. You have exceeded a quota, such as the number of resources per region. Review the [quotas and limits](https://aka.ms/oai/quotas) documentation for more information.
 
+4. You are encountering conflicts with "same resource name not allowed". This is likely because you have run the sample multiple times and deleted the resources without purging them. Azure retains resources for 48 hours unless you purge them from soft delete. Refer to the [purging resources](https://learn.microsoft.com/azure/cognitive-services/manage-resources?tabs=azure-portal#purge-a-deleted-resource) documentation for more information.
+
+5. You encounter a `CERTIFICATE_VERIFY_FAILED` error when running the `prepdocs.py` script. This is typically due to incorrect SSL certificate setup on your machine. Try the suggestions provided in this [StackOverflow answer](https://stackoverflow.com/questions/35569042/ssl-certificate-verify-failed-with-python3/43855394#43855394).
+
+6. After running `azd up` and visiting the website, you see a '404 Not Found' error in the browser. Wait for 10 minutes and try again, as the application may still be starting up. If the issue persists, try running `azd deploy` and wait again. If you continue to encounter errors with the deployed app, refer to the [guide on debugging App Service deployments](docs/appservice.md). If the logs do not help resolve the error, please file an issue.
+
+## Resources
+
+- [Additional documentation for this app](docs/README.md)
+- [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and AI Search](https://aka.ms/entgptsearchblog)
+- [Azure AI Search documentation](https://learn.microsoft.com/azure/search/search-what-is-azure-search)
+- [Azure OpenAI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/overview)
+- [Comparing Azure OpenAI and OpenAI](https://learn.microsoft.com/azure/cognitive-services/openai/overview#comparing-azure-openai-and-openai/)
+- [Access Control in Generative AI applications with Azure Cognitive Search](https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/access-control-in-generative-ai-applications-with-azure/ba-p/3956408)
+- [Video overview of OpenAI apps on Azure](https://www.youtube.com/watch?v=j8i-OM5kwiY)
+- [AI Chat App Hack series](https://www.youtube.com/playlist?list=PL5lwDBUC0ag6_dGZst5m3G72ewfwXLcXV)
+
+### Getting Help
+
+This repository is supported by the maintainers, not by Microsoft Support. For help with deploying this sample, please post in [GitHub Issues](/issues). If you are a Microsoft employee, you can also post in [our Teams channel](https://aka.ms/azai-python-help).
 1. You're getting "same resource name not allowed" conflicts. That's likely because you've run the sample multiple times and deleted the resources you've been creating each time, but are forgetting to purge them. Azure keeps resources for 48 hours unless you purge from soft delete. See [this article on purging resources](https://learn.microsoft.com/azure/cognitive-services/manage-resources?tabs=azure-portal#purge-a-deleted-resource).
 
 1. You see `CERTIFICATE_VERIFY_FAILED` when the `prepdocs.py` script runs. That's typically due to incorrect SSL certificates setup on your machine. Try the suggestions in this [StackOverflow answer](https://stackoverflow.com/questions/35569042/ssl-certificate-verify-failed-with-python3/43855394#43855394).
